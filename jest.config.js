@@ -1,1 +1,1 @@
-module.exports = { preset: 'jest-expo', testMatch: ['**/tests/**/*.test.ts'] };
+module.exports = { preset: 'jest-expo', testMatch: ['**/tests/**/*.test.ts'], moduleNameMapper: { '^@ibudget/finance-core$': '<rootDir>/packages/finance-core/src/index.ts', '^@ibudget/data-access$': '<rootDir>/packages/data-access/src/index.ts' } };

@@ -15,7 +15,7 @@ create table public.profiles (
 create table public.financial_accounts (
  id uuid primary key default gen_random_uuid(), user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
  name text not null check (char_length(name) between 1 and 100), account_type public.account_type not null,
- currency char(3) not null default 'ZAR', opening_balance_minor bigint not null default 0,
+ currency char(3) not null default 'ZAR', opening_balance_minor bigint not null default 0 check (opening_balance_minor between -9007199254740991 and 9007199254740991),
  is_archived boolean not null default false, created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
  unique(id,user_id)
 );
@@ -28,7 +28,7 @@ create table public.categories (
 create table public.transactions (
  id uuid primary key default gen_random_uuid(), user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
  account_id uuid not null, category_id uuid, transaction_type public.transaction_type not null,
- amount_minor bigint not null check (amount_minor > 0), currency char(3) not null default 'ZAR',
+ amount_minor bigint not null check (amount_minor > 0 and amount_minor <= 9007199254740991), currency char(3) not null default 'ZAR',
  description text not null check (char_length(description) between 1 and 240), merchant text,
  occurred_at timestamptz not null, is_recurring boolean not null default false, notes text,
  created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz,
@@ -40,24 +40,24 @@ create table public.budgets (
  id uuid primary key default gen_random_uuid(), user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
  name text not null, period_type text not null check (period_type in ('weekly','monthly','custom')),
  start_date date not null, end_date date not null, currency char(3) not null default 'ZAR',
- total_limit_minor bigint not null check (total_limit_minor >= 0), status text not null default 'active' check (status in ('active','archived')),
+ total_limit_minor bigint not null check (total_limit_minor between 0 and 9007199254740991), status text not null default 'active' check (status in ('active','archived')),
  created_at timestamptz not null default now(), updated_at timestamptz not null default now(), check (end_date >= start_date), unique(id,user_id)
 );
 create table public.budget_allocations (
  id uuid primary key default gen_random_uuid(), budget_id uuid not null, user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
- category_id uuid not null references public.categories(id) on delete restrict, allocated_amount_minor bigint not null check (allocated_amount_minor >= 0),
+ category_id uuid not null references public.categories(id) on delete restrict, allocated_amount_minor bigint not null check (allocated_amount_minor between 0 and 9007199254740991),
  created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
  foreign key(budget_id,user_id) references public.budgets(id,user_id) on delete cascade, unique(budget_id,category_id)
 );
 create table public.savings_goals (
  id uuid primary key default gen_random_uuid(), user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
- name text not null, description text, target_amount_minor bigint not null check (target_amount_minor > 0), currency char(3) not null default 'ZAR',
+ name text not null, description text, target_amount_minor bigint not null check (target_amount_minor between 1 and 9007199254740991), currency char(3) not null default 'ZAR',
  target_date date, icon text, status text not null default 'active' check (status in ('active','completed','paused','archived')),
  created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(id,user_id)
 );
 create table public.goal_contributions (
  id uuid primary key default gen_random_uuid(), user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
- goal_id uuid not null, amount_minor bigint not null check (amount_minor > 0), contribution_date date not null default current_date,
+ goal_id uuid not null, amount_minor bigint not null check (amount_minor > 0 and amount_minor <= 9007199254740991), contribution_date date not null default current_date,
  source_type text not null default 'manual', linked_transaction_id uuid references public.transactions(id) on delete set null,
  notes text, created_at timestamptz not null default now(), foreign key(goal_id,user_id) references public.savings_goals(id,user_id) on delete cascade
 );
@@ -73,7 +73,7 @@ create table public.user_achievements (
 );
 create table public.financial_snapshots (
  id uuid primary key default gen_random_uuid(), user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
- snapshot_date date not null, currency char(3) not null, available_balance_minor bigint, income_minor bigint, expense_minor bigint,
+ snapshot_date date not null, currency char(3) not null, available_balance_minor bigint check (available_balance_minor between -9007199254740991 and 9007199254740991), income_minor bigint check (income_minor between 0 and 9007199254740991), expense_minor bigint check (expense_minor between 0 and 9007199254740991),
  created_at timestamptz not null default now(), unique(user_id,snapshot_date,currency)
 );
 create table public.insight_records (
@@ -89,7 +89,7 @@ create policy profiles_read_own on public.profiles for select to authenticated u
 create policy profiles_insert_own on public.profiles for insert to authenticated with check (id=auth.uid());
 create policy profiles_update_own on public.profiles for update to authenticated using (id=auth.uid()) with check (id=auth.uid());
 do $$ declare t text; begin
- foreach t in array array['financial_accounts','categories','transactions','budgets','budget_allocations','savings_goals','goal_contributions','user_achievements','financial_snapshots','insight_records'] loop
+ foreach t in array array['financial_accounts','categories','transactions','budgets','budget_allocations','savings_goals','goal_contributions','financial_snapshots','insight_records'] loop
   execute format('alter table public.%I enable row level security',t);
   execute format('create policy %I on public.%I for select to authenticated using (user_id = auth.uid())',t||'_read_own',t);
   execute format('create policy %I on public.%I for insert to authenticated with check (user_id = auth.uid())',t||'_insert_own',t);
@@ -97,6 +97,8 @@ do $$ declare t text; begin
   execute format('create policy %I on public.%I for delete to authenticated using (user_id = auth.uid())',t||'_delete_own',t);
  end loop;
 end $$;
+alter table public.user_achievements enable row level security;
+create policy user_achievements_read_own on public.user_achievements for select to authenticated using (user_id = auth.uid());
 alter table public.achievements enable row level security;
 create policy achievements_catalog_read on public.achievements for select to authenticated using (is_active);
 revoke insert,update,delete on public.achievements from anon,authenticated;
@@ -104,7 +106,6 @@ revoke insert,update,delete on public.achievements from anon,authenticated;
 drop policy if exists user_achievements_insert_own on public.user_achievements;
 drop policy if exists user_achievements_update_own on public.user_achievements;
 drop policy if exists user_achievements_delete_own on public.user_achievements;
-create policy user_achievements_read_own on public.user_achievements for select to authenticated using (user_id=auth.uid());
 -- Shared category catalogue rows are readable; writes remain owner-scoped.
 create policy categories_read_system_or_own on public.categories for select to authenticated using (is_system or user_id=auth.uid());
 
@@ -156,10 +157,21 @@ on conflict do nothing;
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
- insert into public.profiles(id,display_name) values (new.id, nullif(new.raw_user_meta_data->>'display_name',''));
+ insert into public.profiles(id,display_name) values (new.id, left(nullif(new.raw_user_meta_data->>'display_name',''),100));
  return new;
 end $$;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
+
+
+
+
+-- These rows are derived or awarded by trusted server-side jobs, never by a public client.
+revoke insert, update, delete on public.user_achievements, public.financial_snapshots, public.insight_records from anon, authenticated;
+-- Trigger functions are callable only as triggers; callers cannot invoke them as RPC functions.
+revoke all on function public.validate_transaction_references() from public, anon, authenticated;
+revoke all on function public.validate_allocation_references() from public, anon, authenticated;
+revoke all on function public.validate_contribution_transaction() from public, anon, authenticated;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
 
 

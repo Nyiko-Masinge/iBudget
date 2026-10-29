@@ -1,0 +1,1 @@
+{"name":"@ibudget/data-access","version":"1.0.0","private":true,"type":"module","exports":{".":"./src/index.ts"},"scripts":{"typecheck":"tsc --noEmit -p tsconfig.json"},"dependencies":{"@supabase/supabase-js":"^2.57.0","zod":"^3.25.0"}}
