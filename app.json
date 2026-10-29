@@ -1,0 +1,3 @@
+{
+  "expo": {"name":"iBudget", "slug":"ibudget", "scheme":"ibudget", "version":"1.0.0", "orientation":"portrait", "userInterfaceStyle":"automatic", "plugins":["expo-router"], "experiments":{"typedRoutes":true}, "web":{"bundler":"metro", "name":"iBudget"}}
+}
