@@ -1,5 +1,26 @@
 {
-  "extends":"expo/tsconfig.base",
-  "compilerOptions":{"strict":true,"baseUrl":".","paths":{"@/*":["./src/*"],"@ibudget/finance-core":["../../packages/finance-core/src/index.ts"],"@ibudget/data-access":["../../packages/data-access/src/index.ts"]},"noEmit":true},
-  "include":["**/*.ts","**/*.tsx","../../packages/finance-core/src/**/*.ts","../../packages/data-access/src/**/*.ts"]
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@ibudget/finance-core": [
+        "../../packages/finance-core/src/index.ts"
+      ],
+      "@ibudget/data-access": [
+        "../../packages/data-access/src/index.ts"
+      ]
+    },
+    "noEmit": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../../packages/finance-core/src/**/*.ts",
+    "../../packages/data-access/src/**/*.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }

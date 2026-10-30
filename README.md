@@ -14,20 +14,20 @@ See [security architecture](docs/security-architecture.md) for trust boundaries 
 
 ## Setup
 
-Use Node.js 20 LTS and npm. Copy `apps/mobile/.env.example` to `apps/mobile/.env`, then set the Supabase project URL and publishable/anon key. Never place a service-role key in any Expo variable or source file.
+Use Node.js 20 LTS and npm. Copy `apps/mobile/.env.example` to `apps/mobile/.env`, then set the Supabase project URL and publishable key. Never place a service-role key in any Expo variable or source file.
 
 ```sh
 npm install
 npm run start
 ```
 
-Run `npm run web`, `npm run android`, or `npm run ios` for other Expo targets. For Supabase local development, install the Supabase CLI and Docker, then run `supabase start --workdir backend/supabase`. See [Supabase setup](docs/supabase-setup.md).
+Run `npm run web`, `npm run android`, or `npm run ios` for other Expo targets. For Supabase local development, install the Supabase CLI and Docker, then run `npm run supabase:start`. See [Supabase setup](docs/supabase-setup.md).
 
 ## Backend workflow
 
 1. Review migrations under `backend/supabase/migrations`.
-2. Link a development project with `supabase link --project-ref YOUR_PROJECT_REF --workdir backend/supabase`.
-3. Apply reviewed migrations with `supabase db push --workdir backend/supabase`.
+2. Link a development project with `npx supabase link --project-ref YOUR_PROJECT_REF --workdir backend`.
+3. Apply reviewed migrations with `npx supabase db push --workdir backend`.
 4. Test RLS using separate user accounts before loading any real financial data.
 
 Do not apply this initial development schema blindly to an existing database. It has not been applied to or verified against a live Supabase project.
