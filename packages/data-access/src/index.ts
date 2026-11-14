@@ -38,7 +38,7 @@ export async function createFinancialTransaction(client:SupabaseClient,input:{ac
  if(error) throw new Error('Unable to save this transaction. Check the account and try again.');
 }
 
-export { signInWithPassword, registerWithPassword } from './auth';
+export { signInWithPassword, registerWithPassword, resendConfirmation, requestPasswordReset } from './auth';
 
 
 

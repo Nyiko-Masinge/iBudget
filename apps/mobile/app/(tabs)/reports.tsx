@@ -1,2 +1,2 @@
 import { Section } from './budgets';
-export default function Reports(){return <Section title="Reports"/>}
+export default function Reports(){return <Section title="Reports" eyebrow="SEE THE FULL PICTURE" icon="⌁" headline="Understand the shape of your spending." detail="Clear summaries and comparisons will help you spot changes over time. Every report will reconcile to transactions you have actually saved." rows={['Compare income and spending by period','See where expenses are going','Review trends without guesswork']}/>}

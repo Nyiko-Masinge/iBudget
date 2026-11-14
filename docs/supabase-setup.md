@@ -25,7 +25,15 @@ This walkthrough is for a new development project. Do not use a production datab
 
 Email/password sign-in is enabled by default. In the project Dashboard open **Authentication → Sign In / Providers** and confirm Email is enabled. Keep email confirmation enabled before real users or real financial data.
 
-The hosted default email sender is for evaluation: Supabase currently limits it to project team email addresses and a low send rate. For general signup testing and for production, configure a custom SMTP provider under the Auth email settings. This app's current sign-up screen does not yet implement the email confirmation deep-link/verification screen, so use a disposable development project and your own team email for a first test; do not turn off confirmation on a project containing real user data. [Supabase email/password docs](https://supabase.com/docs/guides/auth/passwords), [email delivery limits](https://supabase.com/docs/guides/auth/auth-smtp).
+For email confirmations and password resets, open **Authentication → URL Configuration** and add these entries to **Redirect URLs**:
+
+- `exp://**/--/auth/callback` for Expo Go during local development (the phone's LAN host and port can change).
+- `ibudget://auth/callback` for an installed app build.
+- `http://localhost:8081/auth/callback` and `http://localhost:8083/auth/callback` for local web development.
+
+The app sends the matching callback when it requests confirmation or password reset. The Site URL is only a fallback; it does not replace the Redirect URLs allowlist.
+
+The hosted default email sender is for evaluation: Supabase limits delivery to project team email addresses and has a low send rate. For general signup testing and for production, configure a custom SMTP provider under the Auth email settings. The app handles the confirmation callback and password recovery link. [Supabase email/password docs](https://supabase.com/docs/guides/auth/passwords), [email delivery limits](https://supabase.com/docs/guides/auth/auth-smtp).
 
 ## 4. Install the CLI and apply the database schema
 

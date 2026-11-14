@@ -6,7 +6,7 @@ import { formatMoney } from '@ibudget/finance-core';
 import { supabase, supabaseConfigured } from '../../src/backend';
 
 type TransactionType = 'income' | 'expense';
-const green = '#197B58';
+const green = '#26745A';
 
 function amountToMinorUnits(value: string) {
   const normalized = value.trim().replace(',', '.');
@@ -126,13 +126,13 @@ export default function Transactions() {
 }
 
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#F5F8F6' }, content: { padding: 22, paddingTop: 54, paddingBottom: 36 }, center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F8F6', padding: 28 },
-  eyebrow: { color: green, fontSize: 12, fontWeight: '700', letterSpacing: 1.4 }, title: { fontSize: 28, fontWeight: '700', color: '#16231D', marginTop: 8 }, body: { color: '#627169', lineHeight: 22, marginTop: 8 },
-  panel: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18, marginTop: 20, borderWidth: 1, borderColor: '#E5ECE7' }, panelTitle: { color: '#16231D', fontWeight: '700', fontSize: 18, marginBottom: 4 },
+  page: { flex: 1, backgroundColor: '#F5F5EF' }, content: { padding: 22, paddingTop: 54, paddingBottom: 36 }, center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5EF', padding: 28 },
+  eyebrow: { color: green, fontSize: 10, fontWeight: '700', letterSpacing: 1.4 }, title: { fontSize: 29, fontWeight: '700', color: '#173D32', marginTop: 8, letterSpacing: -0.6 }, body: { color: '#68756E', lineHeight: 22, marginTop: 8 },
+  panel: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18, marginTop: 20, borderWidth: 1, borderColor: '#E4E8DF' }, panelTitle: { color: '#173D32', fontWeight: '700', fontSize: 18, marginBottom: 4 },
   segmentRow: { flexDirection: 'row', backgroundColor: '#F1F5F2', padding: 4, borderRadius: 12, marginTop: 16 }, segment: { flex: 1, alignItems: 'center', padding: 11, borderRadius: 9 }, segmentActive: { backgroundColor: '#FFFFFF' }, segmentText: { color: '#627169', fontWeight: '600' }, segmentTextActive: { color: green },
-  fieldLabel: { color: '#35463D', fontSize: 13, fontWeight: '600', marginTop: 15, marginBottom: 6 }, input: { backgroundColor: '#FFFFFF', color: '#16231D', borderWidth: 1, borderColor: '#D8E2DB', borderRadius: 11, paddingHorizontal: 13, paddingVertical: 12 },
+  fieldLabel: { color: '#35463D', fontSize: 13, fontWeight: '600', marginTop: 15, marginBottom: 6 }, input: { backgroundColor: '#FBFCF9', color: '#173D32', borderWidth: 1, borderColor: '#E4E8DF', borderRadius: 11, paddingHorizontal: 13, paddingVertical: 12 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, chip: { borderWidth: 1, borderColor: '#D8E2DB', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12 }, chipActive: { backgroundColor: '#EAF3EE', borderColor: green }, chipText: { color: '#627169', fontSize: 13 }, chipTextActive: { color: green, fontWeight: '600' },
   primaryButton: { backgroundColor: green, borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 18 }, primaryButtonText: { color: '#FFFFFF', fontWeight: '700' }, disabled: { opacity: 0.65 }, feedback: { color: '#35463D', marginTop: 12, lineHeight: 20 },
-  sectionTitle: { color: '#16231D', fontSize: 19, fontWeight: '700', marginTop: 28, marginBottom: 10 }, empty: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E5ECE7', padding: 18 }, emptyTitle: { color: '#16231D', fontWeight: '600' },
+  sectionTitle: { color: '#173D32', fontSize: 19, fontWeight: '700', marginTop: 28, marginBottom: 10 }, empty: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E4E8DF', padding: 18 }, emptyTitle: { color: '#173D32', fontWeight: '600' },
   transactionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E1E8E3', gap: 14 }, transactionDetails: { flex: 1 }, transactionTitle: { color: '#16231D', fontWeight: '600' }, transactionMeta: { color: '#718077', fontSize: 12, marginTop: 4, textTransform: 'capitalize' }, transactionAmount: { fontWeight: '700' }, income: { color: green }, expense: { color: '#35463D' },
 });

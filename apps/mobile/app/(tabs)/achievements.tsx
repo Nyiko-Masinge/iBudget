@@ -1,2 +1,2 @@
 import { Section } from './budgets';
-export default function Achievements(){return <Section title="Achievements"/>}
+export default function Achievements(){return <Section title="Achievements" eyebrow="NOTICE YOUR PROGRESS" icon="✧" headline="Consistency deserves to be seen." detail="Milestones will reflect real activity in your account. No points are awarded for spending, and progress is never invented." rows={['Build a steady tracking habit','Celebrate thoughtful money choices','See earned milestones and what’s next']}/>}

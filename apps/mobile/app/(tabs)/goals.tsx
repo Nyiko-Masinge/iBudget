@@ -1,2 +1,2 @@
 import { Section } from './budgets';
-export default function Goals(){return <Section title="Savings goals"/>}
+export default function Goals(){return <Section title="Savings goals" eyebrow="SMALL STEPS, BIG PLANS" icon="↗" headline="Make a future you can see." detail="Turn something you care about into a clear target. Track contributions at your pace, with progress grounded in your own numbers." rows={['Name what you’re saving for','Choose a target that feels achievable','Track each contribution over time']}/>}
