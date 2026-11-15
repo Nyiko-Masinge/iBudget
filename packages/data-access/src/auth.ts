@@ -11,6 +11,7 @@ export async function signInWithPassword(client:SupabaseClient,email:string,pass
   throw new Error('Your email is not confirmed yet. Check your inbox or tap “Resend confirmation email”.');
  }
  if(error?.code==='invalid_credentials') throw new Error('That email and password combination was not recognized. Check both or reset your password.');
+ if(error?.status===404) throw new Error('Supabase returned 404. Check that apps/mobile/.env uses the Project URL and publishable key from the same active project where this user exists, then restart Expo with --clear.');
  if(error) throw new Error(`Sign-in failed (${error.code ?? error.status}). Please try again.`);
  return data;
 }
@@ -31,6 +32,7 @@ export async function registerWithPassword(client:SupabaseClient,email:string,pa
   throw new Error('Account creation is disabled. Enable email sign-ups in Supabase Authentication settings.');
  }
  if(error?.code==='email_exists') throw new Error('An account already exists for this email. Sign in or reset its password.');
+ if(error?.status===404) throw new Error('Supabase returned 404 during sign-up. Check that the Project URL and publishable key in apps/mobile/.env belong to the same active project, then restart Expo with --clear.');
  if(error) throw new Error(`Account could not be created (${error.code ?? error.status}). Please try again.`);
  return data;
 }
