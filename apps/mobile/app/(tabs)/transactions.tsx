@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFinancialAccount, createFinancialTransaction, listFinancialAccounts, listRecentTransactions, listTransactionCategories } from '@ibudget/data-access';
+import { createFinancialAccount, createFinancialTransaction, deleteFinancialTransaction, listFinancialAccounts, listRecentTransactions, listTransactionCategories, updateFinancialTransaction } from '@ibudget/data-access';
 import { formatMoney } from '@ibudget/finance-core';
 import { supabase, supabaseConfigured } from '../../src/backend';
 
 type TransactionType = 'income' | 'expense';
 const green = '#26745A';
+function confirmDelete(title:string,message:string,onConfirm:()=>void){if(Platform.OS==='web'){if(typeof window!=='undefined'&&window.confirm(`${title}\n\n${message}`))onConfirm();return;}Alert.alert(title,message,[{text:'Cancel',style:'cancel'},{text:'Delete',style:'destructive',onPress:onConfirm}]);}
 
 function amountToMinorUnits(value: string) {
   const normalized = value.trim().replace(',', '.');
@@ -25,6 +26,7 @@ export default function Transactions() {
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [creatingAccount, setCreatingAccount] = useState(false);
 
@@ -68,6 +70,12 @@ export default function Transactions() {
     },
     onError: (error) => setMessage(error instanceof Error ? error.message : 'Could not save the transaction.'),
   });
+  const editTransaction = useMutation({
+    mutationFn: async () => { if (!supabase || !editingId) throw new Error('Select a transaction to edit.'); await updateFinancialTransaction(supabase,{id:editingId,amountMinor:amountToMinorUnits(amount),description}); },
+    onSuccess: async () => { setEditingId(null);setAmount('');setDescription('');setMessage('Transaction updated.');await Promise.all([queryClient.invalidateQueries({queryKey:['transactions']}),queryClient.invalidateQueries({queryKey:['dashboard-transactions']})]); },
+    onError: error => setMessage(error instanceof Error?error.message:'Could not update transaction.'),
+  });
+  const removeTransaction = useMutation({mutationFn:(id:string)=>{if(!supabase)throw new Error('Connect your account first.');return deleteFinancialTransaction(supabase,id)},onSuccess:async()=>{setMessage('Transaction deleted.');await Promise.all([queryClient.invalidateQueries({queryKey:['transactions']}),queryClient.invalidateQueries({queryKey:['dashboard-transactions']})])},onError:error=>setMessage(error instanceof Error?error.message:'Could not delete transaction.')});
 
   async function addFirstAccount() {
     if (!supabase) return;
@@ -99,27 +107,28 @@ export default function Transactions() {
       </Pressable>
     </View> : <View style={s.panel}>
       <Text style={s.panelTitle}>Add transaction</Text>
-      <View style={s.segmentRow}>
+      {!editingId&&<View style={s.segmentRow}>
         {(['expense', 'income'] as const).map((option) => <Pressable key={option} accessibilityRole="button" accessibilityState={{ selected: type === option }} onPress={() => setType(option)} style={[s.segment, type === option && s.segmentActive]}>
           <Text style={[s.segmentText, type === option && s.segmentTextActive]}>{option === 'expense' ? 'Expense' : 'Income'}</Text>
         </Pressable>)}
-      </View>
+      </View>}
       <Text style={s.fieldLabel}>Amount ({selectedAccount?.currency.trim() ?? 'ZAR'})</Text>
       <TextInput accessibilityLabel="Amount" keyboardType="decimal-pad" placeholder="0.00" value={amount} onChangeText={setAmount} style={s.input}/>
       <Text style={s.fieldLabel}>What was it for?</Text>
       <TextInput accessibilityLabel="Description" placeholder="e.g. Groceries" maxLength={240} value={description} onChangeText={setDescription} style={s.input}/>
       {accounts.length > 1 && <><Text style={s.fieldLabel}>Account</Text><View style={s.chipRow}>{accounts.map((account) => <Pressable key={account.id} onPress={() => setAccountId(account.id)} style={[s.chip, selectedAccount?.id === account.id && s.chipActive]}><Text style={[s.chipText, selectedAccount?.id === account.id && s.chipTextActive]}>{account.name}</Text></Pressable>)}</View></>}
       {categories.length > 0 && <><Text style={s.fieldLabel}>Category (optional)</Text><View style={s.chipRow}><Pressable onPress={() => setCategoryId('')} style={[s.chip, !categoryId && s.chipActive]}><Text style={[s.chipText, !categoryId && s.chipTextActive]}>None</Text></Pressable>{categories.map((category) => <Pressable key={category.id} onPress={() => setCategoryId(category.id)} style={[s.chip, categoryId === category.id && s.chipActive]}><Text style={[s.chipText, categoryId === category.id && s.chipTextActive]}>{category.name}</Text></Pressable>)}</View></>}
-      <Pressable accessibilityRole="button" disabled={saveTransaction.isPending} onPress={() => { setMessage(''); saveTransaction.mutate(); }} style={[s.primaryButton, saveTransaction.isPending && s.disabled]}>
-        <Text style={s.primaryButtonText}>{saveTransaction.isPending ? 'Saving…' : 'Save transaction'}</Text>
+      <Pressable accessibilityRole="button" disabled={saveTransaction.isPending||editTransaction.isPending} onPress={() => { setMessage(''); editingId?editTransaction.mutate():saveTransaction.mutate(); }} style={[s.primaryButton, (saveTransaction.isPending||editTransaction.isPending) && s.disabled]}>
+        <Text style={s.primaryButtonText}>{saveTransaction.isPending||editTransaction.isPending ? 'Saving…' : editingId?'Update transaction':'Save transaction'}</Text>
       </Pressable>
+      {editingId&&<Pressable onPress={()=>{setEditingId(null);setAmount('');setDescription('')}}><Text style={s.feedback}>Cancel editing</Text></Pressable>}
       {!!message && <Text accessibilityRole="alert" style={s.feedback}>{message}</Text>}
     </View>}
 
     {!!message && accounts.length === 0 && <Text accessibilityRole="alert" style={s.feedback}>{message}</Text>}
     <Text style={s.sectionTitle}>Recent activity</Text>
     {transactionsQuery.isLoading ? <ActivityIndicator color={green}/> : transactionsQuery.isError ? <View style={s.empty}><Text style={s.emptyTitle}>Couldn’t load transactions</Text><Text style={s.body}>{transactionsQuery.error instanceof Error ? transactionsQuery.error.message : 'The request failed. Try again.'}</Text><Pressable accessibilityRole="button" onPress={() => void transactionsQuery.refetch()}><Text style={s.feedback}>Tap to try again</Text></Pressable></View> : (transactionsQuery.data ?? []).length === 0 ? <View style={s.empty}><Text style={s.emptyTitle}>No transactions yet</Text><Text style={s.body}>Your saved income and expenses will appear here.</Text></View> : (transactionsQuery.data ?? []).map((transaction) => <View key={transaction.id} style={s.transactionRow}>
-      <View style={s.transactionDetails}><Text style={s.transactionTitle} numberOfLines={1}>{transaction.description}</Text><Text style={s.transactionMeta}>{transaction.transaction_type} · {new Date(transaction.occurred_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}</Text></View>
+      <View style={s.transactionDetails}><Text style={s.transactionTitle} numberOfLines={1}>{transaction.description}</Text><Text style={s.transactionMeta}>{transaction.transaction_type} · {new Date(transaction.occurred_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}</Text><View style={s.rowActions}><Pressable onPress={()=>{setEditingId(transaction.id);setDescription(transaction.description);setAmount((transaction.amount_minor/100).toFixed(2));setType(transaction.transaction_type==='income'?'income':'expense');setMessage('')}}><Text style={s.actionText}>Edit</Text></Pressable><Pressable onPress={()=>confirmDelete('Delete transaction?',`Delete “${transaction.description}”?`,()=>removeTransaction.mutate(transaction.id))}><Text style={s.deleteText}>Delete</Text></Pressable></View></View>
       <Text style={[s.transactionAmount, transaction.transaction_type === 'income' ? s.income : s.expense]}>{transaction.transaction_type === 'income' ? '+' : '−'}{formatMoney(transaction.amount_minor, transaction.currency.trim())}</Text>
     </View>)}
   </ScrollView>;
@@ -134,5 +143,5 @@ const s = StyleSheet.create({
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, chip: { borderWidth: 1, borderColor: '#D8E2DB', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12 }, chipActive: { backgroundColor: '#EAF3EE', borderColor: green }, chipText: { color: '#627169', fontSize: 13 }, chipTextActive: { color: green, fontWeight: '600' },
   primaryButton: { backgroundColor: green, borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 18 }, primaryButtonText: { color: '#FFFFFF', fontWeight: '700' }, disabled: { opacity: 0.65 }, feedback: { color: '#35463D', marginTop: 12, lineHeight: 20 },
   sectionTitle: { color: '#173D32', fontSize: 19, fontWeight: '700', marginTop: 28, marginBottom: 10 }, empty: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E4E8DF', padding: 18 }, emptyTitle: { color: '#173D32', fontWeight: '600' },
-  transactionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E1E8E3', gap: 14 }, transactionDetails: { flex: 1 }, transactionTitle: { color: '#16231D', fontWeight: '600' }, transactionMeta: { color: '#718077', fontSize: 12, marginTop: 4, textTransform: 'capitalize' }, transactionAmount: { fontWeight: '700' }, income: { color: green }, expense: { color: '#35463D' },
+  transactionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E1E8E3', gap: 14 }, transactionDetails: { flex: 1 }, transactionTitle: { color: '#16231D', fontWeight: '600' }, transactionMeta: { color: '#718077', fontSize: 12, marginTop: 4, textTransform: 'capitalize' }, transactionAmount: { fontWeight: '700' }, income: { color: green }, expense: { color: '#35463D' }, rowActions:{flexDirection:'row',gap:16,marginTop:6},actionText:{color:green,fontSize:12,fontWeight:'700'},deleteText:{color:'#B23A3A',fontSize:12,fontWeight:'700'},
 });
