@@ -39,7 +39,7 @@ export default function Transactions() {
   }, []);
 
   const accountsQuery = useQuery({ queryKey: ['accounts'], enabled: !!supabase && session === true, queryFn: () => listFinancialAccounts(supabase!) });
-  const transactionsQuery = useQuery({ queryKey: ['transactions'], enabled: !!supabase && session === true, queryFn: () => listRecentTransactions(supabase!, 50) });
+  const transactionsQuery = useQuery({ queryKey: ['transactions', 'recent'], enabled: !!supabase && session === true, queryFn: () => listRecentTransactions(supabase!, 100) });
   const categoriesQuery = useQuery({ queryKey: ['transaction-categories', type], enabled: !!supabase && session === true, queryFn: () => listTransactionCategories(supabase!, type) });
   const accounts = accountsQuery.data ?? [];
   const selectedAccount = accounts.find((account) => account.id === accountId) ?? accounts[0];
@@ -97,7 +97,7 @@ export default function Transactions() {
   return <ScrollView style={s.page} contentContainerStyle={s.content}>
     <Text style={s.eyebrow}>YOUR LEDGER</Text>
     <Text style={s.title}>Transactions</Text>
-    <Text style={s.body}>Record income and expenses in your private account.</Text>
+    <Text style={s.body}>A considered record of money moving through your life.</Text>
 
     {accountsQuery.isLoading ? <ActivityIndicator color={green}/> : accounts.length === 0 ? <View style={s.panel}>
       <Text style={s.panelTitle}>Start with an account</Text>
@@ -135,13 +135,13 @@ export default function Transactions() {
 }
 
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#F5F5EF' }, content: { padding: 22, paddingTop: 54, paddingBottom: 36 }, center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5EF', padding: 28 },
-  eyebrow: { color: green, fontSize: 10, fontWeight: '700', letterSpacing: 1.4 }, title: { fontSize: 29, fontWeight: '700', color: '#173D32', marginTop: 8, letterSpacing: -0.6 }, body: { color: '#68756E', lineHeight: 22, marginTop: 8 },
-  panel: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18, marginTop: 20, borderWidth: 1, borderColor: '#E4E8DF' }, panelTitle: { color: '#173D32', fontWeight: '700', fontSize: 18, marginBottom: 4 },
-  segmentRow: { flexDirection: 'row', backgroundColor: '#F1F5F2', padding: 4, borderRadius: 12, marginTop: 16 }, segment: { flex: 1, alignItems: 'center', padding: 11, borderRadius: 9 }, segmentActive: { backgroundColor: '#FFFFFF' }, segmentText: { color: '#627169', fontWeight: '600' }, segmentTextActive: { color: green },
-  fieldLabel: { color: '#35463D', fontSize: 13, fontWeight: '600', marginTop: 15, marginBottom: 6 }, input: { backgroundColor: '#FBFCF9', color: '#173D32', borderWidth: 1, borderColor: '#E4E8DF', borderRadius: 11, paddingHorizontal: 13, paddingVertical: 12 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, chip: { borderWidth: 1, borderColor: '#D8E2DB', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12 }, chipActive: { backgroundColor: '#EAF3EE', borderColor: green }, chipText: { color: '#627169', fontSize: 13 }, chipTextActive: { color: green, fontWeight: '600' },
-  primaryButton: { backgroundColor: green, borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 18 }, primaryButtonText: { color: '#FFFFFF', fontWeight: '700' }, disabled: { opacity: 0.65 }, feedback: { color: '#35463D', marginTop: 12, lineHeight: 20 },
-  sectionTitle: { color: '#173D32', fontSize: 19, fontWeight: '700', marginTop: 28, marginBottom: 10 }, empty: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E4E8DF', padding: 18 }, emptyTitle: { color: '#173D32', fontWeight: '600' },
-  transactionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E1E8E3', gap: 14 }, transactionDetails: { flex: 1 }, transactionTitle: { color: '#16231D', fontWeight: '600' }, transactionMeta: { color: '#718077', fontSize: 12, marginTop: 4, textTransform: 'capitalize' }, transactionAmount: { fontWeight: '700' }, income: { color: green }, expense: { color: '#35463D' }, rowActions:{flexDirection:'row',gap:16,marginTop:6},actionText:{color:green,fontSize:12,fontWeight:'700'},deleteText:{color:'#B23A3A',fontSize:12,fontWeight:'700'},
+  page: { flex: 1, backgroundColor: '#F4F0E8' }, content: { padding: 24, paddingTop: 54, paddingBottom: 38 }, center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F4F0E8', padding: 28 },
+  eyebrow: { color: green, fontSize: 10, fontWeight: '700', letterSpacing: 1.8 }, title: { fontFamily:'Georgia',fontSize: 32, fontWeight: '400', color: '#25231F', marginTop: 9, letterSpacing: -0.4 }, body: { color: '#777167', lineHeight: 22, marginTop: 8 },
+  panel: { backgroundColor: '#FFFDFA', borderRadius: 19, padding: 19, marginTop: 20, borderWidth: 1, borderColor: '#E4DCCF', shadowColor:'#352B1A',shadowOpacity:0.035,shadowRadius:12,shadowOffset:{width:0,height:5},elevation:1 }, panelTitle: { color: '#25231F', fontWeight: '700', fontSize: 18, marginBottom: 4 },
+  segmentRow: { flexDirection: 'row', backgroundColor: '#F0EBE1', padding: 4, borderRadius: 12, marginTop: 16 }, segment: { flex: 1, alignItems: 'center', padding: 11, borderRadius: 9 }, segmentActive: { backgroundColor: '#FFFDFA' }, segmentText: { color: '#777167', fontWeight: '600' }, segmentTextActive: { color: green },
+  fieldLabel: { color: '#4C473E', fontSize: 13, fontWeight: '600', marginTop: 15, marginBottom: 6 }, input: { backgroundColor: '#F8F5EF', color: '#25231F', borderWidth: 1, borderColor: '#E4DCCF', borderRadius: 11, paddingHorizontal: 14, paddingVertical: 13 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, chip: { borderWidth: 1, borderColor: '#DDD4C5', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12 }, chipActive: { backgroundColor: '#EFE6D5', borderColor: green }, chipText: { color: '#777167', fontSize: 13 }, chipTextActive: { color: green, fontWeight: '600' },
+  primaryButton: { backgroundColor: '#25231F', borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 18 }, primaryButtonText: { color: '#F4E9CF', fontWeight: '700' }, disabled: { opacity: 0.65 }, feedback: { color: '#554E42', marginTop: 12, lineHeight: 20 },
+  sectionTitle: { fontFamily:'Georgia',color: '#25231F', fontSize: 21, fontWeight: '400', marginTop: 28, marginBottom: 10 }, empty: { backgroundColor: '#FFFDFA', borderRadius: 16, borderWidth: 1, borderColor: '#E4DCCF', padding: 18 }, emptyTitle: { color: '#25231F', fontWeight: '600' },
+  transactionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#E4DCCF', gap: 14 }, transactionDetails: { flex: 1 }, transactionTitle: { color: '#25231F', fontWeight: '600' }, transactionMeta: { color: '#777167', fontSize: 12, marginTop: 4, textTransform: 'capitalize' }, transactionAmount: { fontWeight: '700' }, income: { color: green }, expense: { color: '#554E42' }, rowActions:{flexDirection:'row',gap:16,marginTop:6},actionText:{color:green,fontSize:12,fontWeight:'700'},deleteText:{color:'#A34D43',fontSize:12,fontWeight:'700'},
 });

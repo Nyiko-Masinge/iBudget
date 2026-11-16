@@ -15,7 +15,7 @@ function backendError(action:string,error:{code?:string;message:string;details?:
 }
 export const TransactionListSchema=z.array(z.object({id:z.string().uuid(),transaction_type:z.enum(['income','expense','transfer','refund']),amount_minor:MinorAmountSchema,currency:z.string().length(3),description:z.string(),occurred_at:z.string().datetime({offset:true})}));
 export async function listRecentTransactions(client:SupabaseClient,limit=10){
- const safeLimit=z.number().int().min(1).max(100).parse(limit);
+ const safeLimit=z.number().int().min(1).max(1000).parse(limit);
  const {data,error}=await client.from('transactions').select('id,transaction_type,amount_minor,currency,description,occurred_at').is('deleted_at',null).order('occurred_at',{ascending:false}).limit(safeLimit);
  if(error) throw backendError('Unable to load transactions',error);
  return TransactionListSchema.parse(data??[]);
