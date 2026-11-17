@@ -8,7 +8,7 @@
   },
   "scripts": {},
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.0",
+    "@supabase/supabase-js": "^2.119.0",
     "zod": "^3.25.0"
   }
 }
