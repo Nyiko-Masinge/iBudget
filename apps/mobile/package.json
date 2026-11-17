@@ -17,7 +17,7 @@
     "@ibudget/finance-core": "*",
     "@tanstack/react-query": "^5.87.0",
     "expo": "^58.0.21",
-    "expo-constants": "~58.0.14",
+    "expo-constants": "~58.0.16",
     "expo-font": "~58.0.11",
     "expo-linking": "~58.0.15",
     "expo-router": "~58.0.28",
