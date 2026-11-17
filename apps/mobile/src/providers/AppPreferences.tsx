@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Appearance, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 type ThemeMode = 'light' | 'dark';
@@ -23,7 +23,6 @@ async function writeMode(mode: ThemeMode) {
 export function AppPreferencesProvider({ children }: React.PropsWithChildren) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>('light');
   useEffect(() => { void readMode().then(setThemeModeState); }, []);
-  useEffect(() => { Appearance.setColorScheme(themeMode); }, [themeMode]);
   const value = useMemo<Preferences>(() => ({ themeMode, setThemeMode: mode => { setThemeModeState(mode); void writeMode(mode); } }), [themeMode]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
