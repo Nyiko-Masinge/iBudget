@@ -25,7 +25,7 @@ export default function Reports() {
   if (!supabaseConfigured) return <Empty title="Connect your workspace" detail="Your private financial insights will appear here." />;
   if (session === null || query.isLoading) return <View style={s.center}><ActivityIndicator color="#8A7448" /></View>;
   if (!session) return <Empty title="Sign in to continue" detail="Sign in from Home to see your private insights." />;
-  if (query.isError) return <Empty title="Couldn’t load insights" detail={query.error.message} />;
+  if (query.isError) return <Empty title="Couldn’t load insights" detail="Your report couldn’t be loaded. Please try again." />;
 
   const now = new Date();
   const rows = (query.data ?? []).filter(row => { const date = new Date(row.occurred_at); return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth(); });

@@ -62,6 +62,7 @@ Optional local database testing needs Docker Desktop:
 ```powershell
 npm run supabase:start
 npx supabase db reset --workdir backend
+npx supabase test db --workdir backend
 ```
 
 `db reset` destroys and recreates only the local Docker database. Do not add `--linked` for this step.
@@ -79,6 +80,10 @@ Choose the web target in Expo or scan the QR code with Expo Go. For web use `npm
 - In **Table Editor**, confirm the user-owned tables have RLS enabled.
 - Create two test users. Confirm each cannot read or edit the other user's records. Never test RLS using the SQL Editor as `postgres`; that administrative role bypasses normal user policies.
 - Keep only the publishable key in `apps/mobile/.env`. Do not create or share a Secret/service-role key for the mobile app.
+- Review `Database → Roles`/SQL grants and confirm only the intended table privileges remain after the hardening migration. RLS tests run automatically in GitHub Actions when backend files change.
+- In the hosted project's Data API settings, expose only the `public` schema used by this app; keep `graphql_public` out unless you intentionally add GraphQL.
+- Before enabling public signup, use exact redirect URLs only; enable the project's email confirmation and CAPTCHA settings, set Auth rate limits/password policy, and use a custom SMTP provider.
+- For hosted web builds, configure HTTPS and response security headers at the actual hosting provider. At minimum use a project-specific Content Security Policy with `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`. Validate the policy against the generated production build before release.
 - Keep using migrations for schema changes. Do not make one-off dashboard SQL changes that are absent from the repo.
 - Before launch, configure custom SMTP, review redirect URLs, test account recovery and email verification end to end, use separate dev and production projects, and run an independent security review.
 

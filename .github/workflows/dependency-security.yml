@@ -1,0 +1,34 @@
+name: Dependency security
+
+on:
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'apps/**/package.json'
+      - 'packages/**/package.json'
+      - '.github/workflows/dependency-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'apps/**/package.json'
+      - 'packages/**/package.json'
+      - '.github/workflows/dependency-security.yml'
+  schedule:
+    - cron: '23 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check dependency advisories
+        run: npm audit --audit-level=high

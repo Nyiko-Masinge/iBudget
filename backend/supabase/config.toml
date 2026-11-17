@@ -3,7 +3,7 @@ project_id = "ibudget-local"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "graphql_public"]
+schemas = ["public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
@@ -20,8 +20,13 @@ enabled = true
 site_url = "http://localhost:8081"
 additional_redirect_urls = ["http://localhost:8081"]
 enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.rate_limit]
+sign_in_sign_ups = 10
 
 [auth.email]
 enabled = true
 double_confirm_changes = true
 enable_confirmations = true
+max_frequency = "1m"

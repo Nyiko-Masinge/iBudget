@@ -1,17 +1,27 @@
 import { z } from 'zod';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-export const PublicSupabaseConfigSchema = z.object({url:z.string().url(),publishableKey:z.string().min(20)});
+const SupabaseUrlSchema=z.string().url().refine(value=>{
+ try{
+  const parsed=new URL(value);
+  return parsed.protocol==='https:'||(parsed.protocol==='http:'&&['localhost','127.0.0.1','::1','[::1]','10.0.2.2'].includes(parsed.hostname));
+ }catch{return false;}
+},'Use HTTPS for Supabase, except for local development.');
+export const PublicSupabaseConfigSchema = z.object({url:SupabaseUrlSchema,publishableKey:z.string().min(20).refine(value=>value.startsWith('sb_publishable_'),'Only a Supabase publishable key is allowed in the client.')});
 export function createBackendClient(config:unknown, options:Parameters<typeof createClient>[2]={}){
  const parsed=PublicSupabaseConfigSchema.safeParse(config);
  if(!parsed.success) throw new Error('Supabase public configuration is missing or invalid.');
- return createClient(parsed.data.url,parsed.data.publishableKey,options);
+ const originalFetch=options.global?.fetch??globalThis.fetch;
+ const safeFetch:typeof fetch=async(input,init)=>{
+  try{return await originalFetch(input,init);}
+  catch{throw new Error('Network request failed. Please try again.');}
+ };
+ return createClient(parsed.data.url,parsed.data.publishableKey,{...options,global:{...options.global,fetch:safeFetch}});
 }
 const MinorAmountSchema=z.union([z.number().int().positive().max(Number.MAX_SAFE_INTEGER),z.string().regex(/^\d+$/).refine(value=>BigInt(value)>0n&&BigInt(value)<=BigInt(Number.MAX_SAFE_INTEGER)).transform(Number)]);
 function backendError(action:string,error:{code?:string;message:string;details?:string;hint?:string;status?:number}){
- const code=error.code??(error.status?String(error.status):'unknown');
- // Keep the diagnostic actionable without exposing request headers, tokens, or personal data.
- const detail=[error.message,error.hint].filter(Boolean).join(' — ');
- return new Error(`${action} (${code}): ${detail}`);
+ // Backend messages and hints can reveal schema and implementation details in a public client.
+ void error;
+ return new Error(`${action}. Please try again.`);
 }
 export const TransactionListSchema=z.array(z.object({id:z.string().uuid(),transaction_type:z.enum(['income','expense','transfer','refund']),amount_minor:MinorAmountSchema,currency:z.string().length(3),description:z.string(),occurred_at:z.string().datetime({offset:true})}));
 export async function listRecentTransactions(client:SupabaseClient,limit=10){

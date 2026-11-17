@@ -1,0 +1,26 @@
+name: Database security
+
+on:
+  pull_request:
+    paths:
+      - 'backend/supabase/**'
+      - '.github/workflows/database-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/supabase/**'
+      - '.github/workflows/database-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  pg-policy-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - name: Start local Supabase
+        run: supabase start --workdir backend
+      - name: Test database grants and RLS
+        run: supabase test db --workdir backend

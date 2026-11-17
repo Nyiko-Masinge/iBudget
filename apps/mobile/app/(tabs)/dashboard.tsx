@@ -44,11 +44,11 @@ export default function Dashboard() {
     try {
       if (mode === 'sign-in') { await signInWithPassword(supabase, email, password); }
       else if (mode === 'sign-up') {
-        const result = await registerWithPassword(supabase, email, password, redirectUrl());
-        setMessage(result.session ? 'Your account is ready.' : 'Account created. Open the confirmation email to verify your address, then return here to sign in.');
+        await registerWithPassword(supabase, email, password, redirectUrl());
+        setMessage('If this address can be registered, check your inbox for next steps.');
       } else {
         await requestPasswordReset(supabase, email, redirectUrl());
-        setMessage('If an account exists for that email, Supabase has sent a reset link. Check your inbox.');
+        setMessage('If an account exists for that email, a reset message will be sent. Check your inbox and spam folder.');
       }
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Something went wrong. Please try again.'); }
     finally { setBusy(false); }
@@ -57,7 +57,7 @@ export default function Dashboard() {
   async function resend() {
     if (!supabase) return;
     setBusy(true); setMessage('');
-    try { await resendConfirmation(supabase, email, redirectUrl()); setMessage('Confirmation email requested. Check your inbox and spam folder.'); }
+    try { await resendConfirmation(supabase, email, redirectUrl()); setMessage('If this address needs verification, a message will be sent. Check your inbox and spam folder.'); }
     catch (error) { setMessage(error instanceof Error ? error.message : 'Could not resend the email.'); }
     finally { setBusy(false); }
   }
@@ -74,7 +74,8 @@ export default function Dashboard() {
         {mode !== 'reset' && <><View style={s.passwordLabelRow}><Text style={s.fieldLabel}>Password</Text>{mode === 'sign-in' && <Pressable onPress={() => { setMode('reset'); setMessage(''); }}><Text style={s.smallLink}>Forgot password?</Text></Pressable>}</View><TextInput autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} autoCapitalize="none" placeholder={mode === 'sign-up' ? 'At least 12 characters' : 'Your password'} secureTextEntry value={password} onChangeText={setPassword} style={s.input} accessibilityLabel="Password" />{mode === 'sign-up' && <Text style={s.helper}>Use 12 or more characters. Your password is never shared with us.</Text>}</>}
         <Pressable accessibilityRole="button" disabled={busy} onPress={submitAuth} style={[s.primaryButton, busy && s.busy]}><Text style={s.primaryText}>{busy ? 'Please wait…' : mode === 'sign-in' ? 'Sign in securely' : mode === 'sign-up' ? 'Create my account' : 'Send reset link'}</Text></Pressable>
         {mode === 'reset' && <Pressable onPress={() => { setMode('sign-in'); setMessage(''); }}><Text style={s.secondaryLink}>Back to sign in</Text></Pressable>}
-        {!!message && <View style={s.messageBox}><Text accessibilityRole="alert" style={s.message}>{message}</Text>{message.toLowerCase().includes('not confirmed') && <Pressable disabled={busy} onPress={resend}><Text style={s.smallLink}>Resend confirmation email</Text></Pressable>}</View>}
+        {mode === 'sign-in' && <Pressable disabled={busy} onPress={resend}><Text style={s.secondaryLink}>Resend verification email</Text></Pressable>}
+        {!!message && <View style={s.messageBox}><Text accessibilityRole="alert" style={s.message}>{message}</Text></View>}
       </View>
       <Text style={s.securityNote}>Your financial data belongs to you. Sign in to see your private workspace.</Text>
     </KeyboardAvoidingView>
@@ -84,7 +85,7 @@ export default function Dashboard() {
     <View style={s.dashHeader}><View style={s.brandRow}><View style={s.logo}><Text style={s.logoText}>i</Text></View><Text style={s.brand}>ibudget</Text></View></View>
     <Text style={s.greeting}>Our money, Our Vission, Our Future.</Text><Text style={s.subtitle}>I really hope you love it my Babaa, i made it with love and you in mind.May god continue to show up for you, me, us.
 <br />- Love rirhandzoRawe, munu wawe</Text>
-    {!supabaseConfigured ? <View style={s.panel}><Text style={s.panelTitle}>Connect your workspace</Text><Text style={s.body}>Add your Supabase project URL and publishable key to enable secure cloud sync.</Text></View> : query.isLoading ? <View style={s.loadingCard}><ActivityIndicator color={colors.green}/></View> : query.isError ? <View style={s.panel}><Text style={s.panelTitle}>We couldn’t load your ledger</Text><Text style={s.body}>{query.error instanceof Error ? query.error.message : 'The request failed. Try again.'}</Text><Pressable accessibilityRole="button" onPress={() => void query.refetch()}><Text style={s.smallLink}>Try again</Text></Pressable></View> : <>
+    {!supabaseConfigured ? <View style={s.panel}><Text style={s.panelTitle}>Connect your workspace</Text><Text style={s.body}>Add your Supabase project URL and publishable key to enable secure cloud sync.</Text></View> : query.isLoading ? <View style={s.loadingCard}><ActivityIndicator color={colors.green}/></View> : query.isError ? <View style={s.panel}><Text style={s.panelTitle}>We couldn’t load your ledger</Text><Text style={s.body}>Your transactions couldn’t be loaded. Please try again.</Text><Pressable accessibilityRole="button" onPress={() => void query.refetch()}><Text style={s.smallLink}>Try again</Text></Pressable></View> : <>
       <View style={s.balanceCard}><View style={s.balanceTop}><Text style={s.balanceEyebrow}>RECENT ACTIVITY · {summaryCurrency}</Text><Text style={s.balanceIcon}>✦</Text></View><Text style={s.balanceAmount}>{formatMoney(income - expenses, summaryCurrency)}</Text><Text style={s.balanceCaption}>Net across recent transactions in {summaryCurrency}</Text><View style={s.balanceDivider}/><View style={s.balanceStats}><View><Text style={s.statLabel}>Income</Text><Text style={s.statValue}>{formatMoney(income, summaryCurrency)}</Text></View><View style={s.statSep}/><View><Text style={s.statLabel}>Expenses</Text><Text style={s.statValue}>{formatMoney(expenses, summaryCurrency)}</Text></View></View></View>
       <View style={s.quickRow}><Link href="/(tabs)/transactions" asChild><Pressable style={s.quickAction}><Text style={s.quickIcon}>＋</Text><Text style={s.quickText}>Add transaction</Text></Pressable></Link><Link href="/(tabs)/budgets" asChild><Pressable style={s.quickAction}><Text style={s.quickIcon}>◷</Text><Text style={s.quickText}>Plan spending</Text></Pressable></Link></View>
       <View style={s.sectionHeader}><Text style={s.sectionTitle}>Recent activity</Text><Link href="/(tabs)/transactions" style={s.smallLink}>See all</Link></View>

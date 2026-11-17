@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Linking from 'expo-linking';
 import { supabase } from '../../src/backend';
+
+function isTrustedAuthCallback(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+    if (Platform.OS === 'web') {
+      return typeof window !== 'undefined'
+        && url.origin === window.location.origin
+        && /^\/auth\/callback\/?$/.test(url.pathname);
+    }
+    if (url.protocol === 'ibudget:' && url.hostname === 'auth') return url.pathname === '/callback';
+    return url.protocol === 'exp:' && /^\/--\/auth\/callback\/?$/.test(url.pathname);
+  } catch {
+    return false;
+  }
+}
 
 export default function AuthCallback() {
   const [complete, setComplete] = useState(false);
@@ -29,7 +44,7 @@ export default function AuthCallback() {
       if (data.session) { settled = true; setComplete(true); setChecking(false); }
     };
     const processLink = async (url: string) => {
-      if (!url.includes('/auth/callback') && !url.includes('--/auth/callback')) return;
+      if (!isTrustedAuthCallback(url)) return;
       try {
         const parsed = Linking.parse(url);
         const query = parsed.queryParams ?? {};
@@ -41,18 +56,11 @@ export default function AuthCallback() {
         const linkError = value('error_description') ?? value('error');
         if (linkError) throw new Error(linkError);
         const type = value('type');
-        if (type === 'recovery' || type === 'invite') setRecovery(true);
         const code = value('code');
         if (code) {
           const { error } = await client.auth.exchangeCodeForSession(code);
           if (error) throw error;
-        } else {
-          const accessToken = value('access_token');
-          const refreshToken = value('refresh_token');
-          if (accessToken && refreshToken) {
-            const { error } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-            if (error) throw error;
-          }
+          if (type === 'recovery' || type === 'invite') setRecovery(true);
         }
         await finishFromSession();
       } catch (error) { fail(error); }
