@@ -17,7 +17,8 @@
     },
     "web": {
       "bundler": "metro",
-      "name": "iBudget"
+      "name": "iBudget",
+      "output": "single"
     }
   }
 }
