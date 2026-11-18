@@ -2,6 +2,8 @@
 
 This repository contains an Expo app and shared workspace packages. Vercel hosts the **web version**; it does not keep Expo Go running and it does not publish an iOS or Android store app.
 
+Before deploying plan and Insights updates, apply `backend/supabase/migrations/202611180001_plan_timeframes.sql` to the connected Supabase project using the Supabase SQL Editor. This adds the selected savings-goal periods and validates that contributions fall inside each goal's dates. Apply the migration before publishing code that reads the new columns.
+
 ## One-time setup
 
 1. Push this repository to a private or public GitHub repository. Keep `.env` out of Git; it is ignored. Since this checkout is inside OneDrive, consider moving the Git working copy to a regular local development folder and keeping GitHub as the shared source of truth. OneDrive pausing or syncing `.git` can interrupt Git operations.
